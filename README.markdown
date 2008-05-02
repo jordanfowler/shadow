@@ -50,9 +50,10 @@ Example
 
 # Example result from view:
 
-<h1>Vacation Updates</h1>
-
-<p>Jordan added [photo thumbnail] to photos</p>
+<pre>
+  &lt;h1&gt;Vacation Updates&lt;/h1&gt;
+  &lt;p&gt;Jordan added [photo thumbnail] to photos&lt;/p&gt;
+</pre>
 
 
 
