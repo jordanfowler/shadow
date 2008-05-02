@@ -10,37 +10,37 @@ Example
 
 # In your model
 
-class Vacation < ActiveRecord::Base
-  has_many :photos
+  class Vacation < ActiveRecord::Base
+    has_many :photos
 
-  # By default, shadows all :attributes and :associations. Here we're attaching a user, so we know who added a photo.
-  shadow :associations => :photos, :attach => :user
-end
+    # By default, shadows all :attributes and :associations. Here we're attaching a user, so we know who added a photo.
+    shadow :associations => :photos, :attach => :user
+  end
 
 # In your controller (here we assume nested under VacationController)
 
-class PhotosController < ApplicationController
-  def create
-    @vacation = Vacation.find params[:vacation_id]
+  class PhotosController < ApplicationController
+    def create
+      @vacation = Vacation.find params[:vacation_id]
 
-    # This is where you attach the :user to the photo. If Photo doesn't have a user attribute or association, shadow
-    # will attach an attr_accessor to it and store it with the AssociationShadow record.
-    @photo = Photo.new params[:photo].merge(:user => current_user)
+      # This is where you attach the :user to the photo. If Photo doesn't have a user attribute or association, shadow
+      # will attach an attr_accessor to it and store it with the AssociationShadow record.
+      @photo = Photo.new params[:photo].merge(:user => current_user)
 
-    # You must either use the #association<<, #association.push, or #association.create for the shadow to be created.
-    if @vacation.photos << @photo
-      # success!
+      # You must either use the #association<<, #association.push, or #association.create for the shadow to be created.
+      if @vacation.photos << @photo
+        # success!
+      end
     end
   end
-end
 
 # In your view (displaying the updates in the show action of VacationController)
 
 <h1>Vacation Updates</h1>
 
-<% @vacation.association_updates.each do |update| -%>
-  <p><%= update.user.name %> <%= update.action %> <%= update.record.thumbnail %> to <%= update.association %></p>
-<% end -%>
+  <% @vacation.association_updates.each do |update| -%>
+    <p><%= update.user.name %> <%= update.action %> <%= update.record.thumbnail %> to <%= update.association %></p>
+  <% end -%>
 
 # Example result from view:
 
