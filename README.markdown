@@ -10,15 +10,18 @@ Example
 
 # In your model
 
+<pre><code>
   class Vacation < ActiveRecord::Base
     has_many :photos
 
     # By default, shadows all :attributes and :associations. Here we're attaching a user, so we know who added a photo.
     shadow :associations => :photos, :attach => :user
   end
+</code></pre>
 
 # In your controller (here we assume nested under VacationController)
 
+<pre><code>
   class PhotosController < ApplicationController
     def create
       @vacation = Vacation.find params[:vacation_id]
@@ -33,14 +36,17 @@ Example
       end
     end
   end
+</code></pre>
 
 # In your view (displaying the updates in the show action of VacationController)
 
 <h1>Vacation Updates</h1>
 
+<pre><code>
   <% @vacation.association_updates.each do |update| -%>
     <p><%= update.user.name %> <%= update.action %> <%= update.record.thumbnail %> to <%= update.association %></p>
   <% end -%>
+</code></pre>
 
 # Example result from view:
 
