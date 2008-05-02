@@ -162,8 +162,8 @@ module ActiveRecord
         end
 
         module ShadowClassMethods
-          def create_shadowed_attributes_table
-            # this should generate the (table_name)_shadowed_attributes table
+          def create_attribute_shadow_table
+            # this should generate the (table_name)_attribute_shadows table
 
             # [
             #   table_name_prefix,
@@ -173,8 +173,8 @@ module ActiveRecord
             # ].join
           end
 
-          def create_shadowed_associations_table
-            # this should generate the (table_name)_shadowed_associations table
+          def create_association_shadow_table
+            # this should generate the (table_name)_association_shadows table
 
             # [
             #   table_name_prefix,
@@ -185,8 +185,8 @@ module ActiveRecord
           end
 
           def create_shadow_tables
-            create_shadow_attributes_table
-            create_shadow_associations_table
+            create_attribute_shadow_table
+            create_association_shadow_table
           end
 
           protected

@@ -1,0 +1,40 @@
+TODO
+====
+
+- RSpec test coverage (currently only tested in application originally written for)
+
+- Need to define create_attribute_shadow_table and create_association_shadow_table, which will generate a migration for you.
+  Usage example:
+  Vacation.create_attribute_shadow_table    # options include :attachments => [:user, ...] <- creates user_id
+  # Resulting table: vacation_attribute_shadows
+
+  Vacation.create_association_shadow_table  # options include :attachments => [:user, ...] <- creates user_id
+  # Resulting table: vacation_association_shadows
+
+  # And (already defined)
+  Vacation.create_shadow_tables # subsequently calls create_shadow_attributes_table and create_shadow_associations_table
+
+  # This should generate:
+  class CreateVacationShadowTables < ActiveRecord::Migration
+    def self.up
+      create_table :vacation_attribute_shadows do |t|
+        t.text :updated_attributes
+        t.integer :version, :vacation_id, :user_id
+
+        t.timestamps
+      end
+
+      create_table :vacation_association_shadows do |t|
+        t.string :association, :action
+        t.integer :record_id, :record_version, :vacation_id, :user_id
+
+        t.timestamps
+      end
+    end
+
+    def self.down
+      drop_table :vacation_attribute_shadows
+      drop_table :vacation_association_shadows
+    end
+  end
+  
