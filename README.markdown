@@ -43,9 +43,9 @@ Example
 <h1>Vacation Updates</h1>
 
 <pre><code>
-  <% @vacation.association_updates.each do |update| -%>
-    <p><%= update.user.name %> <%= update.action %> <%= update.record.thumbnail %> to <%= update.association %></p>
-  <% end -%>
+  &lt;% @vacation.association_updates.each do |update| -%&gt;
+    &lt;p&gt;&lt;%= update.user.name %&gt; &lt;%= update.action %&gt; &lt;%= update.record.thumbnail %&gt; to &lt;%= update.association %&gt;&lt;/p&gt;
+  &lt;% end -%&gt;
 </code></pre>
 
 # Example result from view:
