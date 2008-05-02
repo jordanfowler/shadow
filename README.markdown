@@ -6,11 +6,11 @@ Provides a history of attribute and association updates for models. This coincid
 Example
 =======
 
-# After creating your migrations (see TODO)
-
-# In your model
-
 <pre><code>
+  # After creating your migrations (see TODO)
+
+  # In your model
+
   class Vacation < ActiveRecord::Base
     has_many :photos
 
@@ -19,9 +19,9 @@ Example
   end
 </code></pre>
 
-# In your controller (here we assume nested under VacationController)
-
 <pre><code>
+  # In your controller (here we assume nested under VacationController)
+
   class PhotosController < ApplicationController
     def create
       @vacation = Vacation.find params[:vacation_id]
@@ -38,22 +38,23 @@ Example
   end
 </code></pre>
 
-# In your view (displaying the updates in the show action of VacationController)
-
-<h1>Vacation Updates</h1>
-
 <pre><code>
+  # In your view (displaying the updates in the show action of VacationController)
+
+  &lt;h1&gt;Vacation Updates&lt;/h1&gt;
+
   &lt;% @vacation.association_updates.each do |update| -%&gt;
     &lt;p&gt;&lt;%= update.user.name %&gt; &lt;%= update.action %&gt; &lt;%= update.record.thumbnail %&gt; to &lt;%= update.association %&gt;&lt;/p&gt;
   &lt;% end -%&gt;
 </code></pre>
 
-# Example result from view:
 
-<pre>
+<pre><code>
+  # Example result from view:
+
   &lt;h1&gt;Vacation Updates&lt;/h1&gt;
   &lt;p&gt;Jordan added [photo thumbnail] to photos&lt;/p&gt;
-</pre>
+</code></pre>
 
 
 
