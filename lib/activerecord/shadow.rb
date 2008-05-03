@@ -127,26 +127,31 @@ module ActiveRecord
         end
 
         module ShadowInstanceMethods
-          def store_updated_association(updated_association)
-            self.class::AssociationShadow.create! updated_association
+          def store_updated_association(association_shadow)
+            self.class::AssociationShadow.create! association_shadow
           end
 
           def store_updated_attributes
-            attribute_shadow = {
-              self.class.to_s.foreign_key => self.id,
-              :updated_attributes => @updated_attributes,
-              :version => self.version
-            }
+            unless @updated_attributes.empty? or self.new_record?
+              attribute_shadow = {
+                self.class.to_s.foreign_key => self.id,
+                :updated_attributes => @updated_attributes,
+              }
 
-            self.class.shadowed_attachments.each do |attachment|
-              if (attached_object = self.send(attachment)).nil? or attached_object.new_record?
-                raise ShadowAttachmentError.new(self.class.to_s, attachment)
-              else
-                attribute_shadow.update("#{attachment}_id".to_sym => attached_object.id)
+              if self.class.respond_to?(:version_column)
+                attribute_shadow[:version] = self.send(self.class.send(:version_column))
               end
-            end
 
-            self.class::AttributeShadow.create! attribute_shadow
+              self.class.shadowed_attachments.each do |attachment|
+                if (attached_object = self.send(attachment)).nil? or attached_object.new_record?
+                  raise ShadowAttachmentError.new(self.class.to_s, attachment)
+                else
+                  attribute_shadow.update("#{attachment}_id".to_sym => attached_object.id)
+                end
+              end
+
+              self.class::AttributeShadow.create! attribute_shadow
+            end
           end
 
           protected
@@ -223,7 +228,7 @@ module ActiveRecord
                 hsh.update({
                   pair.first => Proc.new do |owner,target|
                     unless target.new_record?
-                      updated_association = {
+                      association_shadow = {
                         :association => name,
                         owner.class.to_s.foreign_key => owner.id,
                         :record_id => target.id,
@@ -234,18 +239,18 @@ module ActiveRecord
                         if (attached_object = target.send(attachment)).nil? or attached_object.new_record?
                           raise ShadowAttachmentError.new(target.class.to_s, attachment)
                         else
-                          updated_association.update(attachment.to_s.classify.foreign_key.to_sym => attached_object.id)
+                          association_shadow.update(attachment.to_s.classify.foreign_key.to_sym => attached_object.id)
                         end
                       end
 
                       if target.class.respond_to?(:version_column)
-                        updated_association[:record_version] = target.send(target.class.send(:version_column))
+                        association_shadow[:record_version] = target.send(target.class.send(:version_column))
                       end
 
                       owner.updated_associations = [owner.updated_associations].flatten.compact
-                      owner.updated_associations << updated_association
+                      owner.updated_associations << association_shadow
 
-                      owner.store_updated_association updated_association
+                      owner.store_updated_association association_shadow
                     end
                   end
                 })
