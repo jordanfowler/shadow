@@ -56,6 +56,4 @@ Example
   &lt;p&gt;Jordan added [photo thumbnail] to photos&lt;/p&gt;
 </code></pre>
 
-
-
-Copyright (c) 2008 Jordan Fowler, released under the MIT license
+Copyright (c) 2008 Jordan Fowler, released under the MIT license, and originally developed for Cinema Treasures, LLC (http://www.cinematreasures.org/).
