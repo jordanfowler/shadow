@@ -95,6 +95,16 @@ module ActiveRecord
               end
             end
 
+            self::AttributeShadow.class_eval <<-END
+              def #{self.to_s.underscore}
+                @#{self.to_s.underscore} ||= if self.version.blank?
+                  ::#{self.to_s}.find(self.#{self.to_s.foreign_key})
+                else
+                  ::#{self.to_s}.find_version(self.#{self.to_s.foreign_key}, self.version)
+                end
+              end
+            END
+
             const_set('AssociationShadow', Class.new(ActiveRecord::Base)).class_eval do
               before_save do |shadow|
                 shadow.association = shadow.association.to_s
@@ -102,10 +112,18 @@ module ActiveRecord
               end
 
               def record
-                @record ||= self.association.to_s.classify.constantize.find(self.record_id)
+                @record ||= if self.record_version.blank?
+                  self.association.to_s.classify.constantize.find(self.record_id)
+                else
+                  self.association.to_s.classify.constantize.find_version(self.record_id, self.record_version)
+                end
               end
             end
           end
+
+          self::AssociationShadow.class_eval <<-END
+            belongs_to :#{self.to_s.underscore}, :class_name => "::#{self.to_s}"
+          END
 
           self.shadowed_attachments.each do |attachment|
             [self::AttributeShadow, self::AssociationShadow].each do |klass|
@@ -113,12 +131,6 @@ module ActiveRecord
                 belongs_to :#{attachment}, :class_name => '::#{attachment.to_s.classify}'
               END
             end
-          end
-
-          [self::AttributeShadow, self::AssociationShadow].each do |klass|
-            klass.class_eval <<-END
-              belongs_to :#{self.to_s.underscore}, :class_name => '::#{self.to_s}'
-            END
           end
 
           table_name_prefixes = [table_name_prefix,base_class.name.demodulize.underscore].join
