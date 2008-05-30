@@ -3,6 +3,23 @@ Shadow
 
 Provides a history of attribute and association updates for models. This coincides with a versioning system (such as acts_as_versioned). When used in tandem, you get both a history of changes and a history of what changed.
 
+Installation
+============
+
+If you are running Edge Rails, installation is straightforward:
+
+<pre><code>
+  $ ./script/plugin install git://github.com/TheBreeze/shadow.git
+</code></pre>
+
+Otherwise, the process is a bit more involved, see below:
+
+<pre><code>
+  $ cd /path/to/your/rails/app
+  $ git clone --depth 1 git://github.com/TheBreeze/shadow.git "./vendor/plugins/shadow/"; rm -rf ./vendor/plugins/shadow/.git
+</code></pre>
+
+
 Example
 =======
 
