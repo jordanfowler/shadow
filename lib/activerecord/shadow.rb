@@ -179,34 +179,63 @@ module ActiveRecord
         end
 
         module ShadowClassMethods
-          def create_attribute_shadow_table
-            # this should generate the (table_name)_attribute_shadows table
-
-            # [
-            #   table_name_prefix,
-            #   base_class.name.demodulize.underscore,
-            #   '_shadowed_attributes',
-            #   table_name_suffix
-            # ].join
+          def attribute_shadow_table_name
+            [
+              self.table_name_prefix,
+              self.base_class.name.demodulize.underscore,
+              '_attribute_shadows',
+              self.table_name_suffix
+            ].join
           end
 
-          def create_association_shadow_table
-            # this should generate the (table_name)_association_shadows table
-
-            # [
-            #   table_name_prefix,
-            #   base_class.name.demodulize.underscore,
-            #   '_shadowed_associations',
-            #   table_name_suffix
-            # ].join
+          def association_shadow_table_name
+            [
+              self.table_name_prefix,
+              self.base_class.name.demodulize.underscore,
+              '_association_shadows',
+              self.table_name_suffix
+            ].join
           end
 
-          def create_shadow_tables
-            create_attribute_shadow_table
-            create_association_shadow_table
+          def create_shadow_tables(options = {})
+            attachments = [options.delete(:attachments)].flatten
+
+            create_attribute_shadow_table(attachments, options)
+            create_association_shadow_table(attachments, options)
+          end
+
+          def drop_shadow_tables
+            self.connection.drop_table attribute_shadow_table_name
+            self.connection.drop_table association_shadow_table_name
           end
 
           protected
+          def create_attribute_shadow_table(attachments, options = {})
+            self.connection.create_table(attribute_shadow_table_name, options) do |t|
+              t.text :updated_attributes
+              t.integer :version, self.to_s.foreign_key.to_sym
+
+              attachments.each do |attachment|
+                t.integer attachment.to_s.foreign_key.to_sym
+              end
+
+              t.timestamps
+            end
+          end
+
+          def create_association_shadow_table(attachments, options = {})
+            self.connection.create_table(association_shadow_table_name, options) do |t|
+              t.string :association, :action
+              t.integer :record_id, :record_version, self.to_s.foreign_key.to_sym
+
+              attachments.each do |attachment|
+                t.integer attachment.to_s.foreign_key.to_sym
+              end
+
+              t.timestamps
+            end
+          end
+
           def build_instance_attachments
             self.shadowed_attachments.each do |attachment|
               unless [attachment.to_s, "#{attachment}="].include?(self.instance_methods)
@@ -223,6 +252,9 @@ module ActiveRecord
 
               reflection_class = reflection.options.key?(:class_name) ? 
                 reflection.options[:class_name].to_s.constantize : reflection.name.to_s.classify.constantize
+
+              # require reflection_class.underscore unless Object.const_defined?(reflection_class.to_sym)
+              # reflection_class = reflection_class
 
               self.shadowed_attachments.each do |attachment|
                 unless [attachment.to_s, "#{attachment}="].include?(reflection_class.instance_methods)
