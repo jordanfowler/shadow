@@ -100,7 +100,7 @@ module ActiveRecord
                 @#{self.to_s.underscore} ||= if self.version.blank?
                   ::#{self.to_s}.find(self.#{self.to_s.foreign_key})
                 else
-                  ::#{self.to_s}.find_version(self.#{self.to_s.foreign_key}, self.version)
+                  ::#{self.to_s}.find(self.#{self.to_s.foreign_key}).versions.find_by_version(self.version)
                 end
               end
             END
@@ -115,7 +115,7 @@ module ActiveRecord
                 @record ||= if self.record_version.blank?
                   self.association.to_s.classify.constantize.find(self.record_id)
                 else
-                  self.association.to_s.classify.constantize.find_version(self.record_id, self.record_version)
+                  self.record.versions.find_by_version(self.record_version)
                 end
               end
             end
