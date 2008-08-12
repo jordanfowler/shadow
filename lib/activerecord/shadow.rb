@@ -115,7 +115,7 @@ module ActiveRecord
                 @record ||= if self.record_version.blank?
                   self.association.to_s.classify.constantize.find(self.record_id)
                 else
-                  self.record.versions.find_by_version(self.record_version)
+                  self.association.to_s.classify.constantize.find(self.record_id).versions.find_by_version(self.record_version)
                 end
               end
             end
