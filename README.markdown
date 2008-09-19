@@ -6,7 +6,7 @@ Provides a history of attribute and association updates for models. This coincid
 Installation
 ============
 
-If you are running Edge Rails, installation is straightforward:
+If you are running Rails 2.1 or later, installation is straightforward:
 
 <pre><code>
   $ ./script/plugin install git://github.com/TheBreeze/shadow.git
