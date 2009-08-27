@@ -77,15 +77,18 @@ module ActiveRecord
 
             has_many(:attribute_updates, {
               :class_name => "#{self.to_s}::AttributeShadow",
-              :foreign_key => self.to_s.foreign_key
+              :foreign_key => self.to_s.foreign_key,
+              :dependent => :destroy
             })
             has_many(:association_updates, {
               :class_name => "#{self.to_s}::AssociationShadow",
-              :foreign_key => self.to_s.foreign_key
+              :foreign_key => self.to_s.foreign_key,
+              :dependent => :destroy
             })
 
-            before_save :determine_updated_attributes
-            after_save  :store_updated_attributes
+            after_create  :store_created_shadow
+            before_update :determine_updated_attributes
+            after_update  :store_updated_attributes
 
             const_set('AttributeShadow', Class.new(ActiveRecord::Base)).class_eval do
               serialize :updated_attributes, Array
@@ -102,6 +105,10 @@ module ActiveRecord
                 else
                   ::#{self.to_s}.find(self.#{self.to_s.foreign_key}).versions.find_by_version(self.version)
                 end
+              end
+
+              def record
+                #{self.to_s.underscore}
               end
             END
 
@@ -143,30 +150,42 @@ module ActiveRecord
             self.class::AssociationShadow.create! association_shadow
           end
 
+          def store_created_shadow
+            create_attribute_shadow({
+              self.class.to_s.foreign_key => self.id,
+              :updated_attributes => [],
+              :action => 'create'
+            })
+          end
+
           def store_updated_attributes
             unless @updated_attributes.empty? or self.new_record?
-              attribute_shadow = {
-                self.class.to_s.foreign_key => self.id,
+              create_attribute_shadow({
                 :updated_attributes => @updated_attributes,
-              }
-
-              if self.class.respond_to?(:version_column)
-                attribute_shadow[:version] = self.send(self.class.send(:version_column))
-              end
-
-              self.class.shadowed_attachments.each do |attachment|
-                if (attached_object = self.send(attachment)).nil? or attached_object.new_record?
-                  raise ShadowAttachmentError.new(self.class.to_s, attachment)
-                else
-                  attribute_shadow.update("#{attachment}_id".to_sym => attached_object.id)
-                end
-              end
-
-              self.class::AttributeShadow.create! attribute_shadow
+                :action => 'update'
+              })
             end
           end
 
           protected
+          def create_attribute_shadow(attribute_shadow = {})
+            if self.class.respond_to?(:version_column)
+              attribute_shadow[:version] = self.send(self.class.send(:version_column))
+            end
+
+            self.class.shadowed_attachments.each do |attachment|
+              if (attached_object = self.send(attachment)).nil? or attached_object.new_record?
+                raise ShadowAttachmentError.new(self.class.to_s, attachment)
+              else
+                attribute_shadow.update("#{attachment}_id".to_sym => attached_object.id)
+              end
+            end
+
+            self.class::AttributeShadow.create! attribute_shadow.merge({
+              self.class.to_s.foreign_key => self.id
+            })
+          end
+
           def determine_updated_attributes
             @attributes_before_save = self.new_record? ? {} : self.class.find(self.id, {
               :select => self.class.shadowed_attributes.join(',')
@@ -180,19 +199,11 @@ module ActiveRecord
 
         module ShadowClassMethods
           def create_attribute_shadow_table(options = {})
-            table_name = base_class.name.demodulize.underscore
-
-            shadow_table_name = [
-              table_name_prefix,
-              table_name,
-              '_attribute_shadows',
-              table_name_suffix
-            ].join
-
             attach_fields = [options.delete(:attach)].flatten.compact
 
-            ActiveRecord::Base.connection.create_table shadow_table_name, :force => true do |t|
+            ActiveRecord::Base.connection.create_table attribute_shadow_table_name, :force => true do |t|
               t.text     "updated_attributes"
+              t.string   "action"
               t.integer  "version"
               t.datetime "created_at"
               t.datetime "updated_at"
@@ -206,18 +217,9 @@ module ActiveRecord
           end
 
           def create_association_shadow_table(options = {})
-            table_name = base_class.name.demodulize.underscore
-
-            shadow_table_name = [
-              table_name_prefix,
-              table_name,
-              '_association_shadows',
-              table_name_suffix
-            ].join
-
             attach_fields = [options.delete(:attach)].flatten.compact
 
-            ActiveRecord::Base.connection.create_table shadow_table_name, :force => true do |t|
+            ActiveRecord::Base.connection.create_table association_shadow_table_name, :force => true do |t|
               t.string   "association"
               t.string   "action"
               t.integer  "record_id"
@@ -239,28 +241,33 @@ module ActiveRecord
           end
 
           def drop_shadow_tables
-            table_name = base_class.name.demodulize.underscore
-
-            association_shadow_table_name = [
-              table_name_prefix,
-              table_name,
-              '_association_shadows',
-              table_name_suffix
-            ].join
-
             ActiveRecord::Base.connection.drop_table association_shadow_table_name
+            ActiveRecord::Base.connection.drop_table attribute_shadow_table_name
+          end
 
-            attribute_shadow_table_name = [
+          protected
+          def table_name
+            base_class.name.demodulize.underscore
+          end
+
+          def attribute_shadow_table_name
+            [
               table_name_prefix,
               table_name,
               '_attribute_shadows',
               table_name_suffix
             ].join
-
-            ActiveRecord::Base.connection.drop_table attribute_shadow_table_name
           end
 
-          protected
+          def association_shadow_table_name
+            [
+              table_name_prefix,
+              table_name,
+              '_association_shadows',
+              table_name_suffix
+            ].join
+          end
+
           def build_instance_attachments
             self.shadowed_attachments.each do |attachment|
               unless [attachment.to_s, "#{attachment}="].all? {|method| self.instance_methods.include?(method)}
