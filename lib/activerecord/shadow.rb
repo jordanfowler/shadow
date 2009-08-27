@@ -208,7 +208,7 @@ module ActiveRecord
               t.datetime "created_at"
               t.datetime "updated_at"
 
-              t.integer table_name.to_s.foreign_key
+              t.integer table_name.singularize.foreign_key
 
               attach_fields.each do |field|
                 t.integer field.to_s.foreign_key
@@ -227,7 +227,7 @@ module ActiveRecord
               t.datetime "created_at"
               t.datetime "updated_at"
 
-              t.integer table_name.to_s.foreign_key
+              t.integer table_name.singularize.foreign_key
 
               attach_fields.each do |field|
                 t.integer field.to_s.foreign_key
@@ -249,7 +249,7 @@ module ActiveRecord
           def attribute_shadow_table_name
             [
               table_name_prefix,
-              table_name,
+              table_name.singularize,
               '_attribute_shadows',
               table_name_suffix
             ].join
@@ -258,7 +258,7 @@ module ActiveRecord
           def association_shadow_table_name
             [
               table_name_prefix,
-              table_name,
+              table_name.singularize,
               '_association_shadows',
               table_name_suffix
             ].join
