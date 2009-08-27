@@ -179,31 +179,55 @@ module ActiveRecord
         end
 
         module ShadowClassMethods
-          def create_attribute_shadow_table
-            # this should generate the (table_name)_attribute_shadows table
+          def create_attribute_shadow_table(options = {})
+            shadow_table_name = [
+              table_name_prefix,
+              base_class.name.demodulize.underscore,
+              '_attribute_shadows',
+              table_name_suffix
+            ].join
 
-            # [
-            #   table_name_prefix,
-            #   base_class.name.demodulize.underscore,
-            #   '_shadowed_attributes',
-            #   table_name_suffix
-            # ].join
+            attach_fields = [options.delete(:attach)].flatten.compact
+
+            ActiveRecord::Base.connection.create_table shadow_table_name, :force => true do |t|
+              t.text     "updated_attributes"
+              t.integer  "version"
+              t.datetime "created_at"
+              t.datetime "updated_at"
+
+              attach_fields.each do |field|
+                t.integer field.to_s.foreign_key
+              end
+            end
           end
 
-          def create_association_shadow_table
-            # this should generate the (table_name)_association_shadows table
+          def create_association_shadow_table(options = {})
+            shadow_table_name = [
+              table_name_prefix,
+              base_class.name.demodulize.underscore,
+              '_association_shadows',
+              table_name_suffix
+            ].join
 
-            # [
-            #   table_name_prefix,
-            #   base_class.name.demodulize.underscore,
-            #   '_shadowed_associations',
-            #   table_name_suffix
-            # ].join
+            attach_fields = [options.delete(:attach)].flatten.compact
+
+            ActiveRecord::Base.connection.create_table shadow_table_name, :force => true do |t|
+              t.string   "association"
+              t.string   "action"
+              t.integer  "record_id"
+              t.integer  "record_version"
+              t.datetime "created_at"
+              t.datetime "updated_at"
+
+              attach_fields.each do |field|
+                t.integer field.to_s.foreign_key
+              end
+            end
           end
 
-          def create_shadow_tables
-            create_attribute_shadow_table
-            create_association_shadow_table
+          def create_shadow_tables(options = {})
+            create_attribute_shadow_table(options)
+            create_association_shadow_table(options)
           end
 
           protected
