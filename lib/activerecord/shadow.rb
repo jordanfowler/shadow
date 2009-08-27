@@ -246,10 +246,6 @@ module ActiveRecord
           end
 
           protected
-          def table_name
-            base_class.name.demodulize.underscore
-          end
-
           def attribute_shadow_table_name
             [
               table_name_prefix,
