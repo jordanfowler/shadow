@@ -239,6 +239,8 @@ module ActiveRecord
           end
 
           def drop_shadow_tables
+            table_name = base_class.name.demodulize.underscore
+
             association_shadow_table_name = [
               table_name_prefix,
               table_name,
