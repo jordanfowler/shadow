@@ -180,9 +180,11 @@ module ActiveRecord
 
         module ShadowClassMethods
           def create_attribute_shadow_table(options = {})
+            table_name = base_class.name.demodulize.underscore
+
             shadow_table_name = [
               table_name_prefix,
-              base_class.name.demodulize.underscore,
+              table_name,
               '_attribute_shadows',
               table_name_suffix
             ].join
@@ -195,6 +197,8 @@ module ActiveRecord
               t.datetime "created_at"
               t.datetime "updated_at"
 
+              t.integer table_name.to_s.foreign_key
+
               attach_fields.each do |field|
                 t.integer field.to_s.foreign_key
               end
@@ -202,9 +206,11 @@ module ActiveRecord
           end
 
           def create_association_shadow_table(options = {})
+            table_name = base_class.name.demodulize.underscore
+
             shadow_table_name = [
               table_name_prefix,
-              base_class.name.demodulize.underscore,
+              table_name,
               '_association_shadows',
               table_name_suffix
             ].join
@@ -219,6 +225,8 @@ module ActiveRecord
               t.datetime "created_at"
               t.datetime "updated_at"
 
+              t.integer table_name.to_s.foreign_key
+
               attach_fields.each do |field|
                 t.integer field.to_s.foreign_key
               end
@@ -228,6 +236,26 @@ module ActiveRecord
           def create_shadow_tables(options = {})
             create_attribute_shadow_table(options)
             create_association_shadow_table(options)
+          end
+
+          def drop_shadow_tables
+            association_shadow_table_name = [
+              table_name_prefix,
+              table_name,
+              '_association_shadows',
+              table_name_suffix
+            ].join
+
+            ActiveRecord::Base.connection.drop_table association_shadow_table_name
+
+            attribute_shadow_table_name = [
+              table_name_prefix,
+              table_name,
+              '_attribute_shadows',
+              table_name_suffix
+            ].join
+
+            ActiveRecord::Base.connection.drop_table attribute_shadow_table_name
           end
 
           protected
