@@ -24,42 +24,42 @@ Example
 
   # In your model
 
-  class Vacation < ActiveRecord::Base
-    has_many :photos
+    class Vacation < ActiveRecord::Base
+      has_many :photos
 
-    # By default, shadows all :attributes and :associations. Here we're attaching a user, so we know who added a photo.
-    shadow :associations => :photos, :attach => :user
-  end
+      # By default, shadows all :attributes and :associations. Here we're attaching a user, so we know who added a photo.
+      shadow :associations => :photos, :attach => :user
+    end
 
 
   # In your controller (here we assume nested under VacationController)
 
-  class PhotosController < ApplicationController
-    def create
-      @vacation = Vacation.find params[:vacation_id]
-
-      # This is where you attach the :user to the photo. If Photo doesn't have a user attribute or association, shadow
-      # will attach an attr_accessor to it and store it with the AssociationShadow record.
-      @photo = Photo.new params[:photo].merge(:user => current_user)
-
-      # You must either use the #association<<, #association.push, or #association.create for the shadow to be created.
-      if @vacation.photos << @photo
-        # success!
+    class PhotosController < ApplicationController
+      def create
+        @vacation = Vacation.find params[:vacation_id]
+  
+        # This is where you attach the :user to the photo. If Photo doesn't have a user attribute or association, shadow
+        # will attach an attr_accessor to it and store it with the AssociationShadow record.
+        @photo = Photo.new params[:photo].merge(:user => current_user)
+  
+        # You must either use the #association<<, #association.push, or #association.create for the shadow to be created.
+        if @vacation.photos << @photo
+          # success!
+        end
       end
     end
-  end
 
   # In your view (displaying the updates in the show action of VacationController)
 
-  &lt;h1&gt;Vacation Updates&lt;/h1&gt;
+    &lt;h1&gt;Vacation Updates&lt;/h1&gt;
 
-  &lt;% @vacation.association_updates.each do |update| -%&gt;
-    &lt;p&gt;&lt;%= update.user.name %&gt; &lt;%= update.action %&gt; &lt;%= update.record.thumbnail %&gt; to &lt;%= update.association %&gt;&lt;/p&gt;
-  &lt;% end -%&gt;
+    &lt;% @vacation.association_updates.each do |update| -%&gt;
+      &lt;p&gt;&lt;%= update.user.name %&gt; &lt;%= update.action %&gt; &lt;%= update.record.thumbnail %&gt; to &lt;%= update.association %&gt;&lt;/p&gt;
+    &lt;% end -%&gt;
 
   # Example result from view:
 
-  &lt;h1&gt;Vacation Updates&lt;/h1&gt;
-  &lt;p&gt;Jordan added [photo thumbnail] to photos&lt;/p&gt;
+    &lt;h1&gt;Vacation Updates&lt;/h1&gt;
+    &lt;p&gt;Jordan added [photo thumbnail] to photos&lt;/p&gt;
 
 Copyright (c) 2008 Jordan Fowler, released under the MIT license, and originally developed for Cinema Treasures, LLC (http://www.cinematreasures.org/).
