@@ -8,13 +8,13 @@ Installation
 
 If you are running Rails 2.1 or later, installation is straightforward:
 
-  $ ./script/plugin install git://github.com/TheBreeze/shadow.git
+  $ ./script/plugin install git://github.com/jordanfowler/shadow.git
 
 
 Otherwise, the process is a bit more involved, see below:
 
   $ cd /path/to/your/rails/app
-  $ git clone --depth 1 git://github.com/TheBreeze/shadow.git "./vendor/plugins/shadow/"; rm -rf ./vendor/plugins/shadow/.git
+  $ git clone --depth 1 git://github.com/jordanfowler/shadow.git "./vendor/plugins/shadow/"; rm -rf ./vendor/plugins/shadow/.git
 
 
 Example
